@@ -15,32 +15,32 @@ const PromptInput = ({ prompt, onPromptChange, onGenerate, isLoading }: PromptIn
 
   const promptTemplates = [
     {
-      id: 'modern',
+      id: 'natural',
       icon: Zap,
-      title: 'Modern & Minimal',
-      description: 'Temiz, modern tasarım',
-      prompt: 'Modern ve minimal tasarım, temiz arka plan, profesyonel e-ticaret görseli, Trendyol tarzı, yüksek kalite'
+      title: 'Doğal Yerleştirme',
+      description: 'Gerçekçi ve doğal',
+      prompt: 'Ürünü modelin üzerine doğal ve gerçekçi bir şekilde yerleştir, ışık uyumu, gölge detayları, profesyonel fotoğraf kalitesi'
     },
     {
-      id: 'vibrant',
+      id: 'lifestyle',
       icon: Palette,
-      title: 'Renkli & Canlı',
-      description: 'Dikkat çekici renkler',
-      prompt: 'Canlı renkler, gradient arka plan, dinamik kompozisyon, e-ticaret banner, modern tasarım, satış odaklı'
+      title: 'Yaşam Tarzı',
+      description: 'Günlük kullanım odaklı',
+      prompt: 'Ürünü günlük yaşam senaryosunda göster, doğal pozlar, yaşam tarzı fotoğrafçılığı, e-ticaret için optimize'
     },
     {
-      id: 'premium',
+      id: 'studio',
       icon: Sparkles,
-      title: 'Premium & Lüks',
-      description: 'Lüks görünüm',
-      prompt: 'Premium lüks tasarım, altın detaylar, zarif arka plan, yüksek kalite ürün sunumu, Hepsiburada tarzı'
+      title: 'Stüdyo Kalitesi',
+      description: 'Profesyonel stüdyo',
+      prompt: 'Stüdyo kalitesinde profesyonel yerleştirme, mükemmel ışıklandırma, temiz arka plan, ürün odaklı kompozisyon'
     },
     {
-      id: 'sale',
+      id: 'dynamic',
       icon: Target,
-      title: 'İndirim & Kampanya',
-      description: 'Kampanya görseli',
-      prompt: 'İndirim etiketi, kampanya banner, dikkat çekici yazılar, satış odaklı tasarım, e-ticaret promosyonu'
+      title: 'Dinamik Aksiyon',
+      description: 'Hareket ve enerji',
+      prompt: 'Ürünü aktif kullanım anında göster, hareket duygusu, dinamik açılar, enerji dolu kompozisyon'
     }
   ];
 
@@ -80,7 +80,7 @@ const PromptInput = ({ prompt, onPromptChange, onGenerate, isLoading }: PromptIn
         {/* Custom Prompt Input */}
         <div className="relative">
           <Textarea
-            placeholder="Ürününüz için nasıl bir tasarım istiyorsunuz? Detaylı açıklayın... (örn: 'Beyaz arka plan üzerinde profesyonel ürün fotoğrafı, gölgeli zemin, modern tipografi ile ürün adı')"
+            placeholder="Ürünün model üzerine nasıl yerleştirilmesini istiyorsunuz? (örn: 'Ayakkabıyı modelin ayağına doğal şekilde yerleştir, ışık uyumu olsun, profesyonel fotoğraf kalitesinde')"
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}
             className="min-h-[120px] resize-none border-2 focus:border-primary/50 bg-card/50 backdrop-blur-sm"
@@ -96,10 +96,10 @@ const PromptInput = ({ prompt, onPromptChange, onGenerate, isLoading }: PromptIn
             İpuçları
           </h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Ürün pozisyonunu belirtin (merkez, sağ, sol)</li>
-            <li>• Arka plan tercihini ekleyin (beyaz, gradient, renkli)</li>
-            <li>• Metin/etiket istiyorsanız belirtin</li>
-            <li>• Platform stilini söyleyin (Trendyol, Hepsiburada)</li>
+            <li>• Ürünün modele yerleştirilme şeklini açıklayın</li>
+            <li>• Işık ve gölge tercihlerini belirtin</li>
+            <li>• Pozisyon detaylarını verin (doğal, merkezi, vb.)</li>
+            <li>• Genel atmosferi tanımlayın (profesyonel, casual, vb.)</li>
           </ul>
         </div>
       </div>

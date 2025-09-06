@@ -6,9 +6,12 @@ import { toast } from "sonner";
 interface ImageUploadProps {
   onImagesChange: (images: File[]) => void;
   maxImages?: number;
+  uploadType: 'product' | 'model';
+  title: string;
+  description: string;
 }
 
-const ImageUpload = ({ onImagesChange, maxImages = 2 }: ImageUploadProps) => {
+const ImageUpload = ({ onImagesChange, maxImages = 1, uploadType, title, description }: ImageUploadProps) => {
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
 
@@ -98,10 +101,10 @@ const ImageUpload = ({ onImagesChange, maxImages = 2 }: ImageUploadProps) => {
             <Upload className="w-8 h-8 text-primary-foreground" />
           </div>
           <h3 className="text-xl font-semibold mb-2">
-            Ürün Görsellerini Yükleyin
+            {title}
           </h3>
           <p className="text-muted-foreground mb-4">
-            Sürükle bırak veya tıklayarak seç • En fazla {maxImages} görsel
+            {description}
           </p>
           <Button variant="secondary" size="lg" className="pointer-events-none">
             <ImageIcon className="mr-2 h-4 w-4" />

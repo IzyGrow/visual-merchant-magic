@@ -36,21 +36,21 @@ const HeroSection = () => {
         
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
           <span className="bg-gradient-primary bg-clip-text text-transparent">
-            E-Ticaret
+            AI Görsel
           </span>
           <br />
           <span className="text-foreground">
-            Ürün Görseli
+            Birleştirici
           </span>
           <br />
           <span className="bg-gradient-primary bg-clip-text text-transparent">
-            Tasarımcısı
+            E-Ticaret İçin
           </span>
         </h1>
         
         <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-          Gemini 2.5 Flash AI ile Trendyol, Hepsiburada ve diğer e-ticaret platformları için 
-          profesyonel ürün görsellerini saniyeler içinde oluşturun.
+          Gemini 2.5 Flash AI ile ürünlerinizi modeller üzerine yerleştirin. 
+          Ayakkabıyı ayağa, gözlüğü yüze, saati ele - profesyonel e-ticaret görselleri saniyeler içinde.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

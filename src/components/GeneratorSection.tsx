@@ -1,38 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import ImageUpload from "./ImageUpload";
 import PromptInput from "./PromptInput";
 import ResultDisplay from "./ResultDisplay";
+import ApiKeyInput from "./ApiKeyInput";
+import GeminiService from "@/services/geminiService";
 import { toast } from "sonner";
 
 const GeneratorSection = () => {
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [modelImages, setModelImages] = useState<File[]>([]);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    if (storedKey) {
+      setApiKey(storedKey);
+    }
+  }, []);
 
   const handleGenerate = async () => {
-    if (uploadedImages.length === 0) {
-      toast.error("Lütfen en az bir ürün görseli yükleyin");
+    if (!apiKey) {
+      toast.error("Lütfen önce API anahtarınızı girin");
+      return;
+    }
+
+    if (productImages.length === 0) {
+      toast.error("Lütfen ürün görseli yükleyin");
+      return;
+    }
+
+    if (modelImages.length === 0) {
+      toast.error("Lütfen model görseli yükleyin");
       return;
     }
     
     if (!prompt.trim()) {
-      toast.error("Lütfen tasarım talimatınızı yazın");
+      toast.error("Lütfen birleştirme talimatınızı yazın");
       return;
     }
 
     setIsGenerating(true);
-    toast.info("Tasarım oluşturuluyor... Lütfen bekleyin.");
+    toast.info("Görseller birleştiriliyor... Lütfen bekleyin.");
 
     try {
-      // Simulated API call - replace with actual Gemini 2.5 Flash integration
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const geminiService = new GeminiService(apiKey);
+      const result = await geminiService.generateMergedImage({
+        productImage: productImages[0],
+        modelImage: modelImages[0],
+        prompt
+      });
       
-      // Mock generated image URL - replace with actual API response
-      setGeneratedImage("https://images.unsplash.com/photo-1560472355-536de3962603?w=800&h=800&fit=crop&crop=center");
-      
-      toast.success("🎉 Tasarımınız hazır!");
+      setGeneratedImage(result);
+      toast.success("🎉 Görseller başarıyla birleştirildi!");
     } catch (error) {
       console.error("Generation failed:", error);
       toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
@@ -47,27 +70,38 @@ const GeneratorSection = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Tasarımınızı Oluşturun
+              Görselleri Birleştirin
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Ürün görselinizi yükleyin, istediğiniz tasarımı açıklayın ve AI'ın sihirli dokunuşunu izleyin.
+            Ürün ve model görsellerini yükleyin, birleştirme talimatı verin ve AI'ın sihirli birleştirmesini izleyin.
           </p>
+        </div>
+
+        {/* API Key Section */}
+        <div className="mb-8">
+          <ApiKeyInput 
+            onApiKeySet={setApiKey} 
+            storedApiKey={apiKey}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Section */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             <Card className="p-6 bg-gradient-card border-primary/20 backdrop-blur-sm shadow-card">
               <h3 className="text-xl font-semibold mb-6 flex items-center">
                 <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center mr-3">
                   <span className="text-primary-foreground font-bold">1</span>
                 </div>
-                Ürün Görsellerini Yükle
+                Ürün Görseli
               </h3>
               <ImageUpload 
-                onImagesChange={setUploadedImages}
-                maxImages={2}
+                onImagesChange={setProductImages}
+                maxImages={1}
+                uploadType="product"
+                title="Ürün Görselinizi Yükleyin"
+                description="Birleştirilecek ürünün görselini seçin"
               />
             </Card>
 
@@ -76,7 +110,23 @@ const GeneratorSection = () => {
                 <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center mr-3">
                   <span className="text-primary-foreground font-bold">2</span>
                 </div>
-                Tasarım Talimatı Verin
+                Model Görseli
+              </h3>
+              <ImageUpload 
+                onImagesChange={setModelImages}
+                maxImages={1}
+                uploadType="model"
+                title="Model/Kişi Görseli Yükleyin"
+                description="Ürünün yerleştirileceği model görselini seçin"
+              />
+            </Card>
+
+            <Card className="p-6 bg-gradient-card border-primary/20 backdrop-blur-sm shadow-card">
+              <h3 className="text-xl font-semibold mb-6 flex items-center">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-primary-foreground font-bold">3</span>
+                </div>
+                Birleştirme Talimatı
               </h3>
               <PromptInput
                 prompt={prompt}
@@ -92,9 +142,9 @@ const GeneratorSection = () => {
             <Card className="p-6 bg-gradient-card border-primary/20 backdrop-blur-sm shadow-card h-full">
               <h3 className="text-xl font-semibold mb-6 flex items-center">
                 <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-primary-foreground font-bold">3</span>
+                  <span className="text-primary-foreground font-bold">4</span>
                 </div>
-                Sonuç
+                Birleştirilmiş Görsel
               </h3>
               <ResultDisplay
                 generatedImage={generatedImage}
