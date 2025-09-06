@@ -4,7 +4,7 @@ import ImageUpload from "./ImageUpload";
 import PromptInput from "./PromptInput";
 import ResultDisplay from "./ResultDisplay";
 import ApiKeyInput from "./ApiKeyInput";
-import ImageMergeService from "@/services/geminiService";
+import GeminiService from "@/services/geminiService";
 import { toast } from "sonner";
 
 const GeneratorSection = () => {
@@ -23,6 +23,11 @@ const GeneratorSection = () => {
   }, []);
 
   const handleGenerate = async () => {
+    if (!apiKey) {
+      toast.error("Lütfen önce API anahtarınızı girin");
+      return;
+    }
+
     if (productImages.length === 0) {
       toast.error("Lütfen ürün görseli yükleyin");
       return;
@@ -42,8 +47,8 @@ const GeneratorSection = () => {
     toast.info("Görseller birleştiriliyor... Lütfen bekleyin.");
 
     try {
-      const imageService = new ImageMergeService();
-      const result = await imageService.generateMergedImage({
+      const geminiService = new GeminiService(apiKey);
+      const result = await geminiService.generateMergedImage({
         productImage: productImages[0],
         modelImage: modelImages[0],
         prompt
@@ -73,15 +78,13 @@ const GeneratorSection = () => {
           </p>
         </div>
 
-        {/* Hide API Key Section for now since we're using built-in image editing */}
-        {false && (
-          <div className="mb-8">
-            <ApiKeyInput 
-              onApiKeySet={setApiKey} 
-              storedApiKey={apiKey}
-            />
-          </div>
-        )}
+        {/* API Key Section */}
+        <div className="mb-8">
+          <ApiKeyInput 
+            onApiKeySet={setApiKey} 
+            storedApiKey={apiKey}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Section */}
