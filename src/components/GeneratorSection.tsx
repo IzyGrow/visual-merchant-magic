@@ -4,7 +4,7 @@ import ImageUpload from "./ImageUpload";
 import PromptInput from "./PromptInput";
 import ResultDisplay from "./ResultDisplay";
 import ApiKeyInput from "./ApiKeyInput";
-import GeminiService from "@/services/geminiService";
+import ImageEditingService from "@/services/imageEditingService";
 import { toast } from "sonner";
 
 const GeneratorSection = () => {
@@ -23,11 +23,6 @@ const GeneratorSection = () => {
   }, []);
 
   const handleGenerate = async () => {
-    if (!apiKey) {
-      toast.error("Lütfen önce API anahtarınızı girin");
-      return;
-    }
-
     if (productImages.length === 0) {
       toast.error("Lütfen ürün görseli yükleyin");
       return;
@@ -47,8 +42,8 @@ const GeneratorSection = () => {
     toast.info("Görseller birleştiriliyor... Lütfen bekleyin.");
 
     try {
-      const geminiService = new GeminiService(apiKey);
-      const result = await geminiService.generateMergedImage({
+      const imageEditingService = new ImageEditingService();
+      const result = await imageEditingService.mergeImages({
         productImage: productImages[0],
         modelImage: modelImages[0],
         prompt
@@ -78,12 +73,13 @@ const GeneratorSection = () => {
           </p>
         </div>
 
-        {/* API Key Section */}
+        {/* API Key Section - Now Optional */}
         <div className="mb-8">
-          <ApiKeyInput 
-            onApiKeySet={setApiKey} 
-            storedApiKey={apiKey}
-          />
+          <div className="text-center p-4 bg-muted/50 rounded-lg border">
+            <p className="text-sm text-muted-foreground">
+              💡 Şu anda temel görsel birleştirme aktif. Gelişmiş AI özellikleri için API anahtarı ekleyebilirsiniz.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
