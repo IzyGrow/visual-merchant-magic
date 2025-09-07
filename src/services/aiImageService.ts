@@ -1,3 +1,7 @@
+import GeminiService from './geminiService';
+import { ErrorHandler } from './errorHandler';
+import { PromptEnhancer } from './promptEnhancer';
+
 interface ImageMergeRequest {
   productImage: File;
   modelImage: File;
@@ -5,47 +9,64 @@ interface ImageMergeRequest {
 }
 
 export class AIImageService {
+  private geminiService: GeminiService | null = null;
   
-  private async saveImageTemporarily(file: File, name: string): Promise<string> {
-    // Create a temporary path in the assets folder
-    const timestamp = Date.now();
-    const extension = file.name.split('.').pop() || 'jpg';
-    const filename = `temp_${name}_${timestamp}.${extension}`;
-    const tempPath = `src/assets/${filename}`;
-    
-    // Convert file to blob and create object URL
-    const blob = new Blob([file], { type: file.type });
-    const arrayBuffer = await blob.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    
-    // For now, just return the object URL as we can't directly save files
-    return URL.createObjectURL(file);
+  constructor(apiKey?: string) {
+    if (apiKey) {
+      this.geminiService = new GeminiService(apiKey);
+    }
+  }
+
+  setApiKey(apiKey: string) {
+    this.geminiService = new GeminiService(apiKey);
   }
 
   async mergeImages({ productImage, modelImage, prompt }: ImageMergeRequest): Promise<string> {
     try {
       console.log('Starting AI image merge...');
       
-      // Save images temporarily
-      const productPath = await this.saveImageTemporarily(productImage, 'product');
-      const modelPath = await this.saveImageTemporarily(modelImage, 'model');
+      // Enhance the prompt for better AI understanding
+      const enhancedPrompt = PromptEnhancer.enhancePrompt(prompt);
+      console.log('Enhanced prompt:', enhancedPrompt);
       
-      console.log('Images prepared, creating merge prompt...');
+      // Check if we have Gemini API available
+      if (this.geminiService) {
+        console.log('Using Gemini AI for enhanced image merging...');
+        return await this.geminiService.generateMergedImage({
+          productImage,
+          modelImage,
+          prompt: enhancedPrompt
+        });
+      } else {
+        console.log('Gemini API not available, using fallback composite method...');
+        return await this.createFallbackComposite(productImage, modelImage, prompt);
+      }
       
-      // Create detailed merge prompt
-      const mergePrompt = `Seamlessly blend these two images: ${prompt}. 
-      Take the product from the first image and naturally place it on the person/model in the second image. 
-      The result should look like a professional e-commerce photo where the product appears to be worn or used by the model. 
-      Ensure realistic lighting, shadows, and proportions. The final image should be high-quality and commercially viable.`;
+    } catch (error) {
+      ErrorHandler.logError(error, 'AIImageService.mergeImages');
       
-      // Create output path for merged image
-      const outputPath = `src/assets/merged_${Date.now()}.jpg`;
-      
-      // Use Lovable's AI image editing service
-      console.log('Calling AI image editing service...');
-      
-      // Since we can't directly call the imagegen service from here,
-      // we'll create a fallback composite image for now
+      // If Gemini fails, try fallback method
+      if (this.geminiService) {
+        console.log('Gemini failed, trying fallback method...');
+        try {
+          return await this.createFallbackComposite(productImage, modelImage, prompt);
+        } catch (fallbackError) {
+          ErrorHandler.logError(fallbackError, 'AIImageService.fallback');
+          throw new Error(ErrorHandler.handleAIError(fallbackError));
+        }
+      } else {
+        throw new Error(ErrorHandler.handleAIError(error));
+      }
+    }
+  }
+
+  private async createFallbackComposite(
+    productImage: File, 
+    modelImage: File, 
+    prompt: string
+  ): Promise<string> {
+    console.log('Creating fallback composite...');
+    
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -53,74 +74,79 @@ export class AIImageService {
         throw new Error('Canvas not supported');
       }
       
+    // Set high resolution
       canvas.width = 1024;
       canvas.height = 1024;
       
       // Load both images
       const [modelImg, productImg] = await Promise.all([
-        this.loadImage(modelPath),
-        this.loadImage(productPath)
+      this.loadImage(URL.createObjectURL(modelImage)),
+      this.loadImage(URL.createObjectURL(productImage))
       ]);
       
       // Draw model image as background
       ctx.drawImage(modelImg, 0, 0, canvas.width, canvas.height);
       
-      // Create a more sophisticated overlay for the product
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.globalAlpha = 0.8;
-      
-      // Position product based on prompt context
-      let x, y, width, height;
-      
-      if (prompt.toLowerCase().includes('ayak') || prompt.toLowerCase().includes('shoe') || prompt.toLowerCase().includes('ayakkab')) {
-        // Position on feet area
-        x = canvas.width * 0.2;
-        y = canvas.height * 0.7;
-        width = canvas.width * 0.6;
-        height = canvas.height * 0.25;
-      } else if (prompt.toLowerCase().includes('kulak') || prompt.toLowerCase().includes('ear') || prompt.toLowerCase().includes('işitme')) {
-        // Position on ear area  
-        x = canvas.width * 0.6;
-        y = canvas.height * 0.2;
-        width = canvas.width * 0.3;
-        height = canvas.height * 0.2;
-      } else {
-        // Default central position
-        x = canvas.width * 0.3;
-        y = canvas.height * 0.3;
-        width = canvas.width * 0.4;
-        height = canvas.height * 0.4;
-      }
-      
-      // Add shadow/blend effect
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
-      ctx.shadowBlur = 15;
-      ctx.shadowOffsetX = 5;
-      ctx.shadowOffsetY = 5;
-      
-      ctx.drawImage(productImg, x, y, width, height);
-      
-      // Reset composite operation
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 1.0;
+    // Get positioning based on enhanced prompt analysis
+    const positioning = PromptEnhancer.getPositioningHints(prompt);
+    
+    // Create realistic shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = positioning.shadowOffset.x;
+    ctx.shadowOffsetY = positioning.shadowOffset.y;
+    
+    // Apply blend mode for realistic integration
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.9;
+    
+    // Draw product with calculated positioning
+    ctx.drawImage(
+      productImg, 
+      positioning.x, 
+      positioning.y, 
+      positioning.width, 
+      positioning.height
+    );
+    
+    ctx.restore();
+
+    // Add subtle lighting effects
+    this.addLightingEffects(ctx, positioning);
       
       // Convert to blob URL
       return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) {
             const mergedUrl = URL.createObjectURL(blob);
-            console.log('AI merge completed successfully');
+          console.log('Fallback composite created successfully');
             resolve(mergedUrl);
           } else {
-            reject(new Error('Failed to create merged image'));
+          reject(new Error('Failed to create fallback composite'));
           }
         }, 'image/jpeg', 0.95);
       });
-      
-    } catch (error) {
-      console.error('AI image merge error:', error);
-      throw new Error('AI görsel birleştirme başarısız oldu');
-    }
+  }
+
+
+  private addLightingEffects(ctx: CanvasRenderingContext2D, positioning: any): void {
+    // Add subtle lighting overlay
+    const gradient = ctx.createRadialGradient(
+      positioning.x + positioning.width / 2,
+      positioning.y + positioning.height / 2,
+      0,
+      positioning.x + positioning.width / 2,
+      positioning.y + positioning.height / 2,
+      positioning.width
+    );
+    
+    gradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0.1)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   }
   
   private loadImage(src: string): Promise<HTMLImageElement> {
