@@ -53,23 +53,46 @@ class GeminiService {
       const productBase64 = await this.fileToBase64(productImage);
       const modelBase64 = await this.fileToBase64(modelImage);
       
-      // Create detailed prompt for image merging
+      // Create detailed prompt for image analysis and positioning
       const detailedPrompt = `
-        You are an expert e-commerce image editor. I need you to create a professional product placement image.
+        You are an expert e-commerce image editor. Analyze these two images and provide precise positioning data.
         
-        I have two images:
-        1. A product image (${productImage.name})
-        2. A model/person image (${modelImage.name})
+        Images:
+        1. Product: ${productImage.name}
+        2. Model: ${modelImage.name}
         
-        User's instruction: "${prompt}"
+        User instruction: "${prompt}"
         
-        Please analyze both images and provide detailed instructions on how to merge them professionally:
-        - Where should the product be placed on the model?
-        - How should lighting and shadows be adjusted?
-        - What composition would work best for e-commerce?
-        - Any specific positioning or angle recommendations?
+        Analyze both images and provide EXACT positioning data in this JSON format:
+        {
+          "position": {
+            "x": number (0-1024),
+            "y": number (0-1024), 
+            "width": number,
+            "height": number
+          },
+          "shadow": {
+            "x": number,
+            "y": number,
+            "blur": number
+          },
+          "lighting": {
+            "intensity": number (0-1),
+            "angle": number (0-360)
+          },
+          "blendMode": "multiply" | "overlay" | "soft-light",
+          "opacity": number (0-1),
+          "analysis": "Brief explanation of positioning choice"
+        }
         
-        Provide a step-by-step guide for creating this merged image that looks professional and realistic.
+        Consider:
+        - Product type and natural placement
+        - Model's pose and body position
+        - Lighting direction in model image
+        - Professional e-commerce standards
+        - Realistic proportions and perspective
+        
+        Respond ONLY with valid JSON, no other text.
       `;
 
       // Prepare the request with both images
@@ -88,15 +111,16 @@ class GeminiService {
         }
       ];
 
-      // Generate content with Gemini
+      // Generate content with Gemini for image analysis
       const result = await this.model.generateContent([detailedPrompt, ...imageParts]);
       const response = await result.response;
       const text = response.text();
       
       console.log('Gemini AI response:', text);
       
-      // For now, we'll use the AI's analysis to create a better composite
-      // In a full implementation, you'd use the AI's guidance to create the actual merged image
+      // Check if Gemini can generate images (Gemini 1.5 Flash doesn't generate images directly)
+      // So we'll use the AI's analysis to create a much better composite
+      console.log('Creating AI-guided enhanced composite...');
       return await this.createEnhancedComposite(productImage, modelImage, prompt, text);
 
     } catch (error) {
