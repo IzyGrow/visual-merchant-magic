@@ -42,7 +42,7 @@ const GeneratorSection = () => {
     toast.info("AI görselleri birleştiriyor... Bu akıllı algoritmalar 15-30 saniye sürebilir.");
 
     try {
-      const aiImageService = new AIImageService();
+      const aiImageService = new AIImageService(apiKey || undefined);
       const result = await aiImageService.mergeImages({
         productImage: productImages[0],
         modelImage: modelImages[0],
@@ -53,7 +53,8 @@ const GeneratorSection = () => {
       toast.success("🎉 Görseller AI ile profesyonel şekilde birleştirildi!");
     } catch (error) {
       console.error("AI merge failed:", error);
-      toast.error("AI birleştirme başarısız oldu. Lütfen tekrar deneyin.");
+      const errorMessage = error instanceof Error ? error.message : "AI birleştirme başarısız oldu. Lütfen tekrar deneyin.";
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }
