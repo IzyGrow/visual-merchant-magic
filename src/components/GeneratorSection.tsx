@@ -4,7 +4,7 @@ import ImageUpload from "./ImageUpload";
 import PromptInput from "./PromptInput";
 import ResultDisplay from "./ResultDisplay";
 import ApiKeyInput from "./ApiKeyInput";
-import ImageEditingService from "@/services/imageEditingService";
+import AIImageService from "@/services/aiImageService";
 import { toast } from "sonner";
 
 const GeneratorSection = () => {
@@ -39,21 +39,21 @@ const GeneratorSection = () => {
     }
 
     setIsGenerating(true);
-    toast.info("Görseller birleştiriliyor... Lütfen bekleyin.");
+    toast.info("AI görselleri birleştiriyor... Bu akıllı algoritmalar 15-30 saniye sürebilir.");
 
     try {
-      const imageEditingService = new ImageEditingService();
-      const result = await imageEditingService.mergeImages({
+      const aiImageService = new AIImageService();
+      const result = await aiImageService.mergeImages({
         productImage: productImages[0],
         modelImage: modelImages[0],
         prompt
       });
       
       setGeneratedImage(result);
-      toast.success("🎉 Görseller başarıyla birleştirildi!");
+      toast.success("🎉 Görseller AI ile profesyonel şekilde birleştirildi!");
     } catch (error) {
-      console.error("Generation failed:", error);
-      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      console.error("AI merge failed:", error);
+      toast.error("AI birleştirme başarısız oldu. Lütfen tekrar deneyin.");
     } finally {
       setIsGenerating(false);
     }
@@ -73,13 +73,12 @@ const GeneratorSection = () => {
           </p>
         </div>
 
-        {/* API Key Section - Now Optional */}
+        {/* API Key Section */}
         <div className="mb-8">
-          <div className="text-center p-4 bg-muted/50 rounded-lg border">
-            <p className="text-sm text-muted-foreground">
-              💡 Şu anda temel görsel birleştirme aktif. Gelişmiş AI özellikleri için API anahtarı ekleyebilirsiniz.
-            </p>
-          </div>
+          <ApiKeyInput 
+            onApiKeySet={setApiKey} 
+            storedApiKey={apiKey}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
